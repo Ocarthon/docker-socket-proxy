@@ -1,0 +1,40 @@
+name: Build, Test & Deploy
+
+"on":
+  pull_request:
+
+  workflow_dispatch:
+
+env:
+  LANG: "en_US.utf-8"
+  LC_ALL: "en_US.utf-8"
+  PIP_CACHE_DIR: ${{ github.workspace }}/.cache.~/pip
+  PIPX_HOME: ${{ github.workspace }}/.cache.~/pipx
+  POETRY_CACHE_DIR: ${{ github.workspace }}/.cache.~/pypoetry
+  POETRY_VIRTUALENVS_IN_PROJECT: "true"
+  PYTEST_ADDOPTS: ${{ github.event.inputs.pytest_addopts }}
+  PYTHONIOENCODING: "UTF-8"
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python:
+          - 3.8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - run: pip install poetry
+
+      - name: Patch $PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - run: poetry install
+
+      - run: poetry run pytest --prebuild
